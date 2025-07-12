@@ -4,6 +4,7 @@ import com.lms_app.lms_backend.dto.CourseDTO;
 import com.lms_app.lms_backend.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class CourseController {
     private CourseService courseService;
 
     @PostMapping
-    public CourseDTO createCourse(@RequestBody CourseDTO dto) {
+    public CourseDTO createCourse(@Valid @RequestBody CourseDTO dto) {
         return courseService.createCourse(dto);
     }
 
@@ -31,7 +32,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public CourseDTO updateCourse(@PathVariable Long id, @RequestBody CourseDTO dto) {
+    public CourseDTO updateCourse(@PathVariable Long id, @Valid @RequestBody CourseDTO dto) {
         return courseService.updateCourse(id, dto);
     }
 

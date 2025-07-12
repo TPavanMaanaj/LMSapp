@@ -4,6 +4,7 @@ import com.lms_app.lms_backend.dto.UniversityDTO;
 import com.lms_app.lms_backend.service.UniversityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class UniversityController {
     private UniversityService universityService;
 
     @PostMapping
-    public UniversityDTO createUniversity(@RequestBody UniversityDTO dto) {
+    public UniversityDTO createUniversity(@Valid @RequestBody UniversityDTO dto) {
         return universityService.createUniversity(dto);
     }
 
@@ -31,7 +32,7 @@ public class UniversityController {
     }
 
     @PutMapping("/{id}")
-    public UniversityDTO updateUniversity(@PathVariable Long id, @RequestBody UniversityDTO dto) {
+    public UniversityDTO updateUniversity(@PathVariable Long id, @Valid @RequestBody UniversityDTO dto) {
         return universityService.updateUniversity(id, dto);
     }
 
