@@ -1,14 +1,27 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { mockUsers, mockUniversities } from '../data/mockData';
+import { mockUsers } from '../data/mockData';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   loginSuperAdminWith2FA: (userCode: string, generatedCode: string) => Promise<boolean>;
-  addUniversity: (universityData: any) => Promise<boolean>;
+  addUniversity: (universityData: Omit<University, 'id' | 'createdAt'>) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+}
+
+interface University {
+  id: string;
+  name: string;
+  address: string;
+  adminId: string;
+  adminName: string;
+  establishedYear: number;
+  totalStudents: number;
+  totalCourses: number;
+  status: 'active' | 'inactive';
+  createdAt: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return false;
   };
 
-  const addUniversity = async (universityData: any): Promise<boolean> => {
+  const addUniversity = async (universityData: Omit<University, 'id' | 'createdAt'>): Promise<boolean> => {
     setIsLoading(true);
     
     // Simulate API call
@@ -95,6 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
     return true;
   };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');

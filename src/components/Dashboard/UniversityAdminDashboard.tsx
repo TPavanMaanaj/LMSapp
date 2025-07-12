@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   BookOpen, 
   Users, 
@@ -71,21 +71,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
     }
   }, [activeTab]);
 
-  // Load data on component mount and when activeView changes
-  React.useEffect(() => {
-    loadData();
-    
-    // Set up polling for real-time updates every 30 seconds
-    const interval = setInterval(() => {
-      if (!isLoading) {
-        loadData();
-      }
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [activeView]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       await Promise.all([
@@ -98,7 +84,21 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Load data on component mount and when activeView changes
+  React.useEffect(() => {
+    loadData();
+    
+    // Set up polling for real-time updates every 30 seconds
+    const interval = setInterval(() => {
+      if (!isLoading) {
+        loadData();
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [activeView, isLoading, loadData]);
 
   const loadCourses = async () => {
     try {
@@ -209,6 +209,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
         universityId: currentUniversityId
       };
       
+      await StudentService.createStudent(studentData);
       await loadStudents();
       setShowAddStudentModal(false);
       resetStudentForm();

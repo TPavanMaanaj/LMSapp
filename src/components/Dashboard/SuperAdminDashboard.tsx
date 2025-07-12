@@ -3,24 +3,16 @@ import {
   Building, 
   Users, 
   BookOpen, 
-  TrendingUp, 
   Plus,
   Search,
   Edit,
   Trash2,
-  Eye,
   X,
   RefreshCw,
   UserCheck,
   GraduationCap,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Award,
   DollarSign
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import * as UniversityService from '../../services/Universityservice';
 import * as AdminService from '../../services/Adminservice';
 import * as CourseService from '../../services/Courseservice';
@@ -30,8 +22,9 @@ interface SuperAdminDashboardProps {
   activeTab: string;
 }
 
+type EditingEntity = UniversityService.University | AdminService.Admin | CourseService.Course | StudentService.Student;
+
 const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ activeTab }) => {
-  const { user } = useAuth();
   const [activeView, setActiveView] = useState<'overview' | 'universities' | 'admins' | 'courses' | 'students'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +36,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ activeTab }) 
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingEntity, setEditingEntity] = useState<any>(null);
+  const [editingEntity, setEditingEntity] = useState<EditingEntity | null>(null);
   const [editingType, setEditingType] = useState<'university' | 'admin' | 'course' | 'student' | null>(null);
 
   // Data states
@@ -357,7 +350,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ activeTab }) 
   };
 
   // Edit handlers
-  const handleEdit = (entity: any, type: 'university' | 'admin' | 'course' | 'student') => {
+  const handleEdit = (entity: EditingEntity, type: 'university' | 'admin' | 'course' | 'student') => {
     setEditingEntity(entity);
     setEditingType(type);
     setShowEditModal(true);

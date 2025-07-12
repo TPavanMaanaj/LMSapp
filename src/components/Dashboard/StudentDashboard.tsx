@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   BookOpen, 
   Calendar, 
   Award, 
   FileText, 
-  Video, 
-  Link, 
-  Download,
   Plus,
   Search,
   Clock,
@@ -29,12 +26,27 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedCourse, setSelectedCourse] = useState<CourseService.Course | null>(null);
 
   // Data states
   const [courses, setCourses] = useState<CourseService.Course[]>([]);
   const [students, setStudents] = useState<StudentService.Student[]>([]);
   const [universities, setUniversities] = useState<UniversityService.University[]>([]);
+
+  const loadAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        loadCourses(),
+        loadStudents(),
+        loadUniversities()
+      ]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Update activeView based on sidebar selection
   React.useEffect(() => {
@@ -62,22 +74,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
   // Load data on component mount and when activeView changes
   React.useEffect(() => {
     loadAllData();
-  }, [activeView]);
-
-  const loadAllData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        loadCourses(),
-        loadStudents(),
-        loadUniversities()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [activeView, loadAllData]);
 
   const loadCourses = async () => {
     try {

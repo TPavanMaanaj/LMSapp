@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Key, ArrowLeft, Clock, RefreshCw, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -18,7 +18,7 @@ const SuperAdminTwoFactorAuth: React.FC<SuperAdminTwoFactorAuthProps> = ({
   const { loginSuperAdminWith2FA, isLoading } = useAuth();
 
   // Generate unique 2FA code based on admin ID and timestamp
-  const generateTwoFactorCode = () => {
+  const generateTwoFactorCode = useCallback(() => {
     const timestamp = Math.floor(Date.now() / 1000);
     const baseCode = `${adminId}-${timestamp}`;
     
@@ -33,7 +33,7 @@ const SuperAdminTwoFactorAuth: React.FC<SuperAdminTwoFactorAuthProps> = ({
     // Convert to 6-digit code
     const code = Math.abs(hash % 1000000).toString().padStart(6, '0');
     return code;
-  };
+  }, [adminId]);
 
   useEffect(() => {
     // Generate initial 2FA code
@@ -53,7 +53,7 @@ const SuperAdminTwoFactorAuth: React.FC<SuperAdminTwoFactorAuthProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [adminId, onBackToCodeLogin]);
+  }, [adminId, onBackToCodeLogin, generateTwoFactorCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
