@@ -40,18 +40,14 @@ This application provides comprehensive functionality for managing universities,
 1. **Create MySQL Database:**
    ```sql
    CREATE DATABASE university_admin_db;
-   
-   CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin123';
-   GRANT ALL PRIVILEGES ON university_admin_db.* TO 'admin'@'localhost';
-   FLUSH PRIVILEGES;
    ```
 
 2. **Database Configuration:**
    The application is configured to use:
    - Host: localhost:3306
    - Database: university_admin_db
-   - Username: admin
-   - Password: admin123
+   - Username: root
+   - Password: (no password)
 
 ## Running the Application
 

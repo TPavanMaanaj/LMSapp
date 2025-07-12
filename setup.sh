@@ -27,9 +27,6 @@ echo "✅ Prerequisites check passed"
 echo "📊 Setting up database..."
 mysql -u root -p <<EOF
 CREATE DATABASE IF NOT EXISTS university_admin_db;
-CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'admin123';
-GRANT ALL PRIVILEGES ON university_admin_db.* TO 'admin'@'localhost';
-FLUSH PRIVILEGES;
 EOF
 
 if [ $? -eq 0 ]; then

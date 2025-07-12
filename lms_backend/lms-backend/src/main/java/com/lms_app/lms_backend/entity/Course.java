@@ -9,14 +9,22 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String courseName;
     private String courseCode;
-    private String title;
     private String description;
     private int credits;
+    private String instructor;
+    
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @ManyToOne
     @JoinColumn(name = "university_id")
     private University university;
+    
+    public enum Status {
+        ACTIVE, INACTIVE
+    }
 
 	public Long getId() {
 		return id;
@@ -34,12 +42,12 @@ public class Course {
 		this.courseCode = courseCode;
 	}
 
-	public String getTitle() {
-		return title;
+	public String getCourseName() {
+		return courseName;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
+	public void setCourseName(String courseName) {
+		this.courseName = courseName;
 	}
 
 	public String getDescription() {
@@ -66,6 +74,20 @@ public class Course {
 		this.university = university;
 	}
 
-    // Getters and Setters
-    
+	public String getInstructor() {
+		return instructor;
+	}
+
+	public void setInstructor(String instructor) {
+		this.instructor = instructor;
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
 }

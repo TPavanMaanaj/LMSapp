@@ -26,20 +26,24 @@ public class CourseServiceImpl implements CourseService {
     private CourseDTO convertToDTO(Course course) {
         CourseDTO dto = new CourseDTO();
         dto.setId(course.getId());
+        dto.setCourseName(course.getCourseName());
         dto.setCourseCode(course.getCourseCode());
-        dto.setTitle(course.getTitle());
         dto.setDescription(course.getDescription());
         dto.setCredits(course.getCredits());
+        dto.setInstructor(course.getInstructor());
+        dto.setStatus(course.getStatus() != null ? course.getStatus().toString() : "ACTIVE");
         dto.setUniversityId(course.getUniversity().getId());
         return dto;
     }
 
     private Course convertToEntity(CourseDTO dto) {
         Course course = new Course();
+        course.setCourseName(dto.getCourseName());
         course.setCourseCode(dto.getCourseCode());
-        course.setTitle(dto.getTitle());
         course.setDescription(dto.getDescription());
         course.setCredits(dto.getCredits());
+        course.setInstructor(dto.getInstructor());
+        course.setStatus(dto.getStatus() != null ? Course.Status.valueOf(dto.getStatus()) : Course.Status.ACTIVE);
         University university = universityRepository.findById(dto.getUniversityId())
                 .orElseThrow(() -> new ResourceNotFoundException("University not found"));
         course.setUniversity(university);
@@ -70,10 +74,12 @@ public class CourseServiceImpl implements CourseService {
     public CourseDTO updateCourse(Long id, CourseDTO dto) {
         Course existing = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        existing.setCourseName(dto.getCourseName());
         existing.setCourseCode(dto.getCourseCode());
-        existing.setTitle(dto.getTitle());
         existing.setDescription(dto.getDescription());
         existing.setCredits(dto.getCredits());
+        existing.setInstructor(dto.getInstructor());
+        existing.setStatus(dto.getStatus() != null ? Course.Status.valueOf(dto.getStatus()) : Course.Status.ACTIVE);
         return convertToDTO(courseRepository.save(existing));
     }
 
