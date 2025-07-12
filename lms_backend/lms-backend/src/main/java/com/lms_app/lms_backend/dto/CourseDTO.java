@@ -2,10 +2,12 @@ package com.lms_app.lms_backend.dto;
 
 public class CourseDTO {
     private Long id;
+    private String courseName;
     private String courseCode;
-    private String title;
     private String description;
     private int credits;
+    private String instructor;
+    private String status;
     private Long universityId;
 	public Long getId() {
 		return id;
@@ -19,11 +21,11 @@ public class CourseDTO {
 	public void setCourseCode(String courseCode) {
 		this.courseCode = courseCode;
 	}
-	public String getTitle() {
-		return title;
+	public String getCourseName() {
+		return courseName;
 	}
-	public void setTitle(String title) {
-		this.title = title;
+	public void setCourseName(String courseName) {
+		this.courseName = courseName;
 	}
 	public String getDescription() {
 		return description;
@@ -44,6 +46,20 @@ public class CourseDTO {
 		this.universityId = universityId;
 	}
 
-    // Getters and Setters
-    
+	public String getInstructor() {
+		return instructor;
+	}
+
+	public void setInstructor(String instructor) {
+		this.instructor = instructor;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 }
