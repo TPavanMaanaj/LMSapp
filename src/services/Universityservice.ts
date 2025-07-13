@@ -1,6 +1,6 @@
-import axios from 'axios';
+import api from './api';
 
-const BASE_URL = 'http://localhost:8082/api/universities';
+const BASE_URL = '/universities';
 
 export interface University {
   id?: number;
@@ -14,21 +14,21 @@ export interface University {
 }
 
 export const getAllUniversities = () => {
-  return axios.get<University[]>(BASE_URL);
+  return api.get<University[]>(BASE_URL);
 };
 
 export const getUniversityById = (id: number) => {
-  return axios.get<University>(`${BASE_URL}/${id}`);
+  return api.get<University>(`${BASE_URL}/${id}`);
 };
 
 export const createUniversity = (data: University) => {
-  return axios.post<University>(BASE_URL, data);
+  return api.post<University>(BASE_URL, data);
 };
 
 export const updateUniversity = (id: number, data: University) => {
-  return axios.put<University>(`${BASE_URL}/${id}`, data);
+  return api.put<University>(`${BASE_URL}/${id}`, data);
 };
 
 export const deleteUniversity = (id: number) => {
-  return axios.delete(`${BASE_URL}/${id}`);
+  return api.delete(`${BASE_URL}/${id}`);
 };

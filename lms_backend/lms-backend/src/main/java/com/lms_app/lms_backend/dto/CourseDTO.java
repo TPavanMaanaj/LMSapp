@@ -2,8 +2,8 @@ package com.lms_app.lms_backend.dto;
 
 public class CourseDTO {
     private Long id;
-    private String courseName;
     private String courseCode;
+    private String courseName;
     private String description;
     private int credits;
     private String instructor;

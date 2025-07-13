@@ -1,6 +1,7 @@
 package com.lms_app.lms_backend.dto;
 
 public class StudentDTO {
+    private Long id;
     private String studentId;
     private String fullName;
     private String email;
@@ -8,6 +9,15 @@ public class StudentDTO {
     private String year;
     private String phoneNumber;
     private Long universityId;
+	
+	public Long getId() {
+		return id;
+	}
+	
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
 	public String getStudentId() {
 		return studentId;
 	}

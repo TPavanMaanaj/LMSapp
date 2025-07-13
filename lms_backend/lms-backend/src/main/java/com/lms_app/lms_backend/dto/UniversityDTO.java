@@ -1,6 +1,7 @@
 package com.lms_app.lms_backend.dto;
 
 public class UniversityDTO {
+    private Long id;
     private String uniName;
     private String estYear;
     private String address;
@@ -8,6 +9,15 @@ public class UniversityDTO {
     private String adminName;
     private int students;
     private int courses;
+	
+	public Long getId() {
+		return id;
+	}
+	
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
 	public String getUniName() {
 		return uniName;
 	}

@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { mockUsers } from '../data/mockData';
+import axios from 'axios';
 
+const API_BASE_URL = 'http://localhost:8082/api';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -54,16 +55,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      setIsLoading(false);
-      return true;
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email,
+        password
+      });
+      
+      if (response.data.success) {
+        const userData = response.data.user;
+        const user: User = {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          universityId: userData.universityId,
+          studentId: userData.studentId,
+          createdAt: new Date().toISOString()
+        };
+        
+        setUser(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('authToken', response.data.token);
+        setIsLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
     }
     
     setIsLoading(false);
@@ -73,24 +90,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loginSuperAdminWith2FA = async (userCode: string, generatedCode: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Validate 2FA code
-    if (userCode === generatedCode) {
-      const superAdminUser: User = {
-        id: '1',
-        email: 'superadmin@lms.com',
-        name: 'Super Administrator',
-        role: 'super_admin',
-        createdAt: new Date().toISOString()
-      };
-      
-      setUser(superAdminUser);
-      localStorage.setItem('currentUser', JSON.stringify(superAdminUser));
-      localStorage.setItem('superAdmin2FA', userCode);
-      setIsLoading(false);
-      return true;
+    try {
+      // Validate 2FA code
+      if (userCode === generatedCode) {
+        const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+          email: 'superadmin@lms.com',
+          password: 'password'
+        });
+        
+        if (response.data.success) {
+          const userData = response.data.user;
+          const user: User = {
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            createdAt: new Date().toISOString()
+          };
+          
+          setUser(user);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('superAdmin2FA', userCode);
+          setIsLoading(false);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('2FA login failed:', error);
     }
     
     setIsLoading(false);
@@ -100,18 +127,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const addUniversity = async (universityData: Omit<University, 'id' | 'createdAt'>): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In a real app, this would make an API call to create the university
-    // For now, we'll just simulate success
-    setIsLoading(false);
-    return true;
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post(`${API_BASE_URL}/universities`, universityData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      setIsLoading(false);
+      return true;
+    } catch (error) {
+      console.error('Failed to add university:', error);
+      setIsLoading(false);
+      return false;
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('superAdmin2FA');
   };
 

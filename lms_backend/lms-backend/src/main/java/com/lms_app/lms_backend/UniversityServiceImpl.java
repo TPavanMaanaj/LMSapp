@@ -19,6 +19,7 @@ public class UniversityServiceImpl implements UniversityService {
 
     private UniversityDTO convertToDTO(University university) {
         UniversityDTO dto = new UniversityDTO();
+        dto.setId(university.getId());
         dto.setUniName(university.getUniName());
         dto.setEstYear(university.getEstYear());
         dto.setAddress(university.getAddress());
