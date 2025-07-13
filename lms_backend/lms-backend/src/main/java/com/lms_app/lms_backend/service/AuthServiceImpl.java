@@ -3,8 +3,10 @@ package com.lms_app.lms_backend.service;
 import com.lms_app.lms_backend.dto.LoginResponse;
 import com.lms_app.lms_backend.entity.Admin;
 import com.lms_app.lms_backend.entity.Students;
+import com.lms_app.lms_backend.entity.University;
 import com.lms_app.lms_backend.repository.AdminRepository;
 import com.lms_app.lms_backend.repository.StudentRepository;
+import com.lms_app.lms_backend.repository.UniversityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private UniversityRepository universityRepository;
 
     @Override
     public LoginResponse authenticate(String email, String password) {
@@ -50,6 +55,10 @@ public class AuthServiceImpl implements AuthService {
         Optional<Admin> adminOpt = adminRepository.findByEmail(email);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
+            
+            // Find the university this admin manages
+            Optional<University> universityOpt = universityRepository.findByAdminName(admin.getAdminName());
+            
             Map<String, Object> user = new HashMap<>();
             user.put("id", admin.getId().toString());
             user.put("email", admin.getEmail());
@@ -57,9 +66,12 @@ public class AuthServiceImpl implements AuthService {
             user.put("role", "university_admin");
             user.put("universityName", admin.getUniName());
             
-            // Find university ID by admin name
-            // This is a simplified approach - in production you'd have a proper foreign key
-            user.put("universityId", "1"); // Default for demo, should be dynamic
+            // Set university ID if found
+            if (universityOpt.isPresent()) {
+                user.put("universityId", universityOpt.get().getId().toString());
+            } else {
+                user.put("universityId", "1"); // Default fallback
+            }
             
             response.setSuccess(true);
             response.setUser(user);
