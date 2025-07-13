@@ -11,6 +11,10 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
 interface University {
   id: string;
   name: string;
@@ -24,8 +28,10 @@ interface University {
   createdAt: string;
 }
 
+// Properly declare AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Export useAuth hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -34,10 +40,7 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
+// Export AuthProvider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,16 +57,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      setIsLoading(false);
-      return true;
+    try {
+      // Make real API call to backend
+      const response = await fetch('http://localhost:8082/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        setIsLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      // Fallback to mock data if API is not available
+      const foundUser = mockUsers.find(u => u.email === email);
+      if (foundUser && password === 'password') {
+        setUser(foundUser);
+        localStorage.setItem('currentUser', JSON.stringify(foundUser));
+        setIsLoading(false);
+        return true;
+      }
     }
     
     setIsLoading(false);
@@ -115,8 +137,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('superAdmin2FA');
   };
 
+  // Explicitly define the value object
+  const contextValue: AuthContextType = {
+    user,
+    login,
+    loginSuperAdminWith2FA,
+    addUniversity,
+    logout,
+    isLoading
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, loginSuperAdminWith2FA, addUniversity, logout, isLoading }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,22 +13,13 @@ export interface University {
   courses: number;
 }
 
-export const getAllUniversities = () => {
-  return axios.get<University[]>(BASE_URL);
-};
+export const getAllUniversities = () => axios.get<University[]>(BASE_URL);
 
-export const getUniversityById = (id: number) => {
-  return axios.get<University>(`${BASE_URL}/${id}`);
-};
+export const getUniversityById = (id: number) => axios.get<University>(`${BASE_URL}/${id}`);
 
-export const createUniversity = (data: University) => {
-  return axios.post<University>(BASE_URL, data);
-};
+export const createUniversity = (university: University) => axios.post<University>(BASE_URL, university);
 
-export const updateUniversity = (id: number, data: University) => {
-  return axios.put<University>(`${BASE_URL}/${id}`, data);
-};
+export const updateUniversity = (id: number, university: University) =>
+  axios.put<University>(`${BASE_URL}/${id}`, university);
 
-export const deleteUniversity = (id: number) => {
-  return axios.delete(`${BASE_URL}/${id}`);
-};
+export const deleteUniversity = (id: number) => axios.delete(`${BASE_URL}/${id}`);
