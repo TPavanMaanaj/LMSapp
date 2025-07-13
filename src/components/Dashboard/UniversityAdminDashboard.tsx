@@ -140,10 +140,13 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
   };
 
   // Filter data for current university (assuming user has universityId)
-  const currentUniversityId = user?.universityId ? parseInt(user.universityId) : 0;
+  const currentUniversityId = user?.universityId ? parseInt(user.universityId) : 
+    (user?.role === 'university_admin' ? 
+      universities.find(u => u.adminName === user.name)?.id || 0 : 0);
   const universityCourses = courses.filter(course => course.universityId === currentUniversityId);
   const universityStudents = students.filter(student => student.universityId === currentUniversityId);
-  const currentUniversity = universities.find(u => u.id === currentUniversityId);
+  const currentUniversity = universities.find(u => u.id === currentUniversityId) || 
+    universities.find(u => u.adminName === user?.name);
 
   const stats = [
     {
@@ -808,14 +811,16 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">University Name</label>
               <input
                 type="text"
-                value={currentUniversity?.uniName || ''}
+                value={currentUniversity?.uniName || 'Loading...'}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <textarea
-                value={currentUniversity?.address || ''}
+                value={currentUniversity?.address || 'Loading...'}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 rows={3}
               />
@@ -824,13 +829,11 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Established Year</label>
               <input
                 type="text"
-                value={currentUniversity?.estYear || ''}
+                value={currentUniversity?.estYear || 'Loading...'}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
-              Update University Information
-            </button>
           </div>
         </div>
 
@@ -841,7 +844,8 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name</label>
               <input
                 type="text"
-                value={user?.name || ''}
+                value={user?.name || 'Loading...'}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -849,19 +853,11 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
-                value={user?.email || ''}
+                value={user?.email || 'Loading...'}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <button className="w-full text-left px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                Change Password
-              </button>
-            </div>
-            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
-              Update Profile
-            </button>
           </div>
         </div>
       </div>

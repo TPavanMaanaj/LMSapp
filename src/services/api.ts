@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:8082/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,6 +14,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
+    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -21,6 +22,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -28,14 +30,26 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
+    console.log(`Response from ${response.config.url}:`, response.status);
     return response;
   },
   (error) => {
+    console.error('Response interceptor error:', error);
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+      console.error('Cannot connect to backend server. Please ensure it is running on http://localhost:8082');
+      return Promise.reject(new Error('Backend server is not running. Please start the server and try again.'));
+    }
+    
     if (error.response?.status === 401) {
       // Token expired or invalid
+      console.log('Authentication failed, clearing stored credentials');
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
-      window.location.href = '/';
+      // Only redirect if we're not already on the login page
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }

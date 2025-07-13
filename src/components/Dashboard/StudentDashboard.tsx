@@ -111,7 +111,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
 
   // Find current student data
   const currentStudent = students.find(s => s.email === user?.email);
-  const currentUniversityId = user?.universityId ? parseInt(user.universityId) : 0;
+  const currentUniversityId = user?.universityId ? parseInt(user.universityId) : (currentStudent?.universityId || 0);
   const enrolledCourses = courses.filter(course => 
     course.universityId === currentUniversityId
   ).slice(0, 3); // Simplified - showing first 3 courses as "enrolled"
@@ -164,7 +164,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
         <h2 className="text-2xl font-bold mb-2">Welcome back, {currentStudent?.fullName || user?.name}!</h2>
         <p className="text-indigo-100">
-          {currentStudent?.major} • Year {currentStudent?.year} • {currentStudent?.studentId}
+          {currentStudent?.major || 'Student'} • Year {currentStudent?.year || user?.studentId?.slice(-1) || '1'} • {currentStudent?.studentId || user?.studentId}
           <br />
           {currentUniversity?.uniName}
         </p>
@@ -479,7 +479,8 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
                 type="text"
-                value={currentStudent?.fullName || ''}
+                value={currentStudent?.fullName || user?.name || ''}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -487,7 +488,8 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
-                value={currentStudent?.email || ''}
+                value={currentStudent?.email || user?.email || ''}
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -495,7 +497,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
               <input
                 type="text"
-                value={currentStudent?.studentId || ''}
+                value={currentStudent?.studentId || user?.studentId || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 readOnly
               />
@@ -504,7 +506,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ activeTab }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Major</label>
               <input
                 type="text"
-                value={currentStudent?.major || ''}
+                value={currentStudent?.major || 'Not specified'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>

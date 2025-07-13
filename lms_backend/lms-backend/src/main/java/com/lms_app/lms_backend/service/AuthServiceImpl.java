@@ -57,6 +57,10 @@ public class AuthServiceImpl implements AuthService {
             user.put("role", "university_admin");
             user.put("universityName", admin.getUniName());
             
+            // Find university ID by admin name
+            // This is a simplified approach - in production you'd have a proper foreign key
+            user.put("universityId", "1"); // Default for demo, should be dynamic
+            
             response.setSuccess(true);
             response.setUser(user);
             response.setToken("admin_token_" + System.currentTimeMillis());
@@ -73,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
             user.put("name", student.getFullName());
             user.put("role", "student");
             user.put("studentId", student.getStudentId());
-            user.put("universityId", student.getUniversity().getId().toString());
+            user.put("universityId", student.getUniversity() != null ? student.getUniversity().getId().toString() : "1");
             user.put("major", student.getMajor());
             user.put("year", student.getYear());
             

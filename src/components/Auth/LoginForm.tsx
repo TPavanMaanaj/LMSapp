@@ -25,8 +25,10 @@ const LoginForm: React.FC = () => {
     { email: 'admin@iitd.ac.in', role: 'University Admin (IIT Delhi)' },
     { email: 'admin@iitb.ac.in', role: 'University Admin (IIT Bombay)' },
     { email: 'admin@iisc.ac.in', role: 'University Admin (IISc Bangalore)' },
-    { email: 'student@iitd.ac.in', role: 'Student (IIT Delhi)' },
-    { email: 'student@iitb.ac.in', role: 'Student (IIT Bombay)' }
+    { email: 'aarav@iitd.ac.in', role: 'Student (Aarav Gupta - IIT Delhi)' },
+    { email: 'kavya@iitd.ac.in', role: 'Student (Kavya Reddy - IIT Delhi)' },
+    { email: 'diya@iitb.ac.in', role: 'Student (Diya Singh - IIT Bombay)' },
+    { email: 'aryan@iisc.ac.in', role: 'Student (Aryan Mehta - IISc)' }
   ];
 
   if (showSuperAdminCodeLogin) {
@@ -52,6 +54,9 @@ const LoginForm: React.FC = () => {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}
+              <div className="text-xs mt-1 text-red-600">
+                Make sure the backend server is running on http://localhost:8082
+              </div>
             </div>
           )}
           
@@ -137,6 +142,13 @@ const LoginForm: React.FC = () => {
           <p className="mt-4 text-xs text-gray-500">
             Password for all demo accounts: <code className="bg-gray-100 px-1 py-0.5 rounded">password</code>
           </p>
+          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-800 font-medium">Backend Status Check:</p>
+            <p className="text-xs text-blue-600 mt-1">
+              Ensure MySQL is running and backend is started with: <br/>
+              <code className="bg-blue-100 px-1 py-0.5 rounded text-xs">cd lms_backend/lms-backend && ./mvnw spring-boot:run</code>
+            </p>
+          </div>
         </div>
 
         <div className="text-center">
