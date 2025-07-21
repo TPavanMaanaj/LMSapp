@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   BookOpen, 
   Users, 
@@ -8,51 +8,100 @@ import {
   Edit,
   Trash2,
   Eye,
-  X,
-  RefreshCw
+  X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import * as CourseService from '../../services/Courseservice';
-import * as StudentService from '../../services/Studentservice';
-import * as UniversityService from '../../services/Universityservice';
+import { getCourseById, getEnrollments, getUniversities, getUsersByUniversityAndRole, mockStudents } from '../../data/mockData';
+import { Courses, Enrollment, Universities, UserDTO } from '../../types';
 
 interface UniversityAdminDashboardProps {
   activeTab: string;
+  universityId: number;
 }
 
-const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ activeTab }) => {
-  const { user } = useAuth();
+const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({  activeTab , universityId }) => {
+  const { user, isLoading } = useAuth();
   const [activeView, setActiveView] = useState<'overview' | 'courses' | 'students'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-
-  // Data states
-  const [courses, setCourses] = useState<CourseService.Course[]>([]);
-  const [students, setStudents] = useState<StudentService.Student[]>([]);
-  const [universities, setUniversities] = useState<UniversityService.University[]>([]);
-
-  // Form states
+  const [Courses, setCourses] = useState<Courses[]>([]);
+  const [Universities, setUniversities] = useState<Universities[]>([]);
+  const [student, setStudent] = useState<UserDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [Enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [courseForm, setCourseForm] = useState({
-    courseName: '',
+    name: '',
+    code: '',
     description: '',
-    credits: 3,
     instructor: '',
-    universityId: 0,
-    status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE'
+    credits: 3,
+    duration: '16 weeks',
+    capacity: 50,
+    category: 'Computer Science'
+  });
+  const [studentForm, setStudentForm] = useState({
+    name: '',
+    email: '',
+    studentId: '',
+    major: '',
+    year: 1
   });
 
-  const [studentForm, setStudentForm] = useState({
-    studentId: '',
-    fullName: '',
-    email: '',
-    major: '',
-    year: '1',
-    phoneNumber: '',
-    universityId: 0
-  });
+  useEffect(() => {
+      const fetchCourses = async () => {
+        try {
+          const coursedata = await getCourseById();
+          setCourses(coursedata);
+        } catch (error) {
+          console.error('Error fetching universities:', error);
+        }
+      };
+  
+      fetchCourses();
+    }, []);
+
+     useEffect(() => {
+        const fetchStudents = async () => {
+          try {
+            const studata = await getUsersByUniversityAndRole(Number(universityId), 'STUDENT');
+            setStudent(studata);
+          } catch (error) {
+            console.error('Error fetching students:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+    
+        fetchStudents();
+      }, []);
+    
+    useEffect(() => {
+        const fetchUniversities = async () => {
+          try {
+            const unidata = await getUniversities();
+            setUniversities(unidata);
+          } catch (error) {
+            console.error('Error fetching universities:', error);
+          }
+        };
+    
+        fetchUniversities();
+      }, []);
+
+      useEffect(() => {
+          const fetchEnrollments = async () => {
+            try {
+              const enrolldata = await getEnrollments();
+              setEnrollments(enrolldata);
+            } catch (error) {
+              console.error('Error fetching universities:', error);
+            }
+          };
+      
+          fetchEnrollments();
+        }, []);
+
 
   // Update activeView based on sidebar selection
   React.useEffect(() => {
@@ -71,82 +120,11 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
     }
   }, [activeTab]);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        loadCourses(),
-        loadStudents(),
-        loadUniversities()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load data on component mount and when activeView changes
-  React.useEffect(() => {
-    loadData();
-    
-    // Set up polling for real-time updates every 30 seconds
-    const interval = setInterval(() => {
-      if (!isLoading) {
-        loadData();
-      }
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [activeView, isLoading, loadData]);
-
-  const loadCourses = async () => {
-    try {
-      const response = await CourseService.getAllCourses();
-      console.log('Loaded courses:', response.data);
-      setCourses(response.data);
-    } catch (error) {
-      console.error('Error loading courses:', error);
-      alert('Failed to load courses. Please check your connection.');
-    }
-  };
-
-  const loadStudents = async () => {
-    try {
-      const response = await StudentService.getAllStudents();
-      console.log('Loaded students:', response.data);
-      setStudents(response.data);
-    } catch (error) {
-      console.error('Error loading students:', error);
-      alert('Failed to load students. Please check your connection.');
-    }
-  };
-
-  const loadUniversities = async () => {
-    try {
-      const response = await UniversityService.getAllUniversities();
-      console.log('Loaded universities:', response.data);
-      setUniversities(response.data);
-    } catch (error) {
-      console.error('Error loading universities:', error);
-      alert('Failed to load universities. Please check your connection.');
-    }
-  };
-
-  const refreshData = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
-
-  // Filter data for current university (assuming user has universityId)
-  const currentUniversityId = user?.universityId ? parseInt(user.universityId) : 
-    (user?.role === 'university_admin' ? 
-      universities.find(u => u.adminName === user.name)?.id || 0 : 0);
-  const universityCourses = courses.filter(course => course.universityId === currentUniversityId);
-  const universityStudents = students.filter(student => student.universityId === currentUniversityId);
-  const currentUniversity = universities.find(u => u.id === currentUniversityId) || 
-    universities.find(u => u.adminName === user?.name);
+  // Filter data for current university
+  const universityCourses = Courses.filter(course => Number(course.universityId) === user?.universityId);
+  const universityStudents = student.filter(student => Number(student.universityId) === user?.universityId);
+  const currentUniversity = Universities.find(u => Number(u.id) === user?.universityId);
+  const enrolledCourse = Enrollments.filter(enrolls => enrolls.universityId == user?.universityId);
 
   const stats = [
     {
@@ -165,7 +143,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
     },
     {
       title: 'Active Enrollments',
-      value: universityStudents.length * 2, // Simplified calculation
+      value: enrolledCourse.length,
       icon: TrendingUp,
       color: 'bg-purple-500',
       trend: '+18%'
@@ -174,120 +152,37 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
 
   const handleAddCourse = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const courseData = {
-        ...courseForm,
-        universityId: currentUniversityId
-      };
-      
-      console.log('Creating course:', courseData);
-      const response = await CourseService.createCourse(courseData);
-      console.log('Course created:', response.data);
-      
-      // Reload data to reflect changes
-      await loadCourses();
-      
-      // Close modal and reset form
-      setShowAddCourseModal(false);
-      resetCourseForm();
-      
-      alert('Course added successfully!');
-    } catch (error) {
-      console.error('Error adding course:', error);
-      alert('Failed to add course. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setShowAddCourseModal(false);
+    setCourseForm({
+      name: '',
+      code: '',
+      description: '',
+      instructor: '',
+      credits: 3,
+      duration: '16 weeks',
+      capacity: 50,
+      category: 'Computer Science'
+    });
   };
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const studentData = {
-        ...studentForm,
-        universityId: currentUniversityId
-      };
-      
-      await StudentService.createStudent(studentData);
-      await loadStudents();
-      setShowAddStudentModal(false);
-      resetStudentForm();
-    } catch (error) {
-      console.error('Error adding student:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteCourse = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
-    
-    setIsLoading(true);
-    try {
-      await CourseService.deleteCourse(id);
-      await loadCourses();
-    } catch (error) {
-      console.error('Error deleting course:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteStudent = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this student?')) return;
-    
-    setIsLoading(true);
-    try {
-      await StudentService.deleteStudent(id);
-      await loadStudents();
-    } catch (error) {
-      console.error('Error deleting student:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetCourseForm = () => {
-    setCourseForm({
-      courseName: '',
-      description: '',
-      credits: 3,
-      instructor: '',
-      universityId: 0,
-      status: 'ACTIVE'
-    });
-  };
-
-  const resetStudentForm = () => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setShowAddStudentModal(false);
     setStudentForm({
-      studentId: '',
-      fullName: '',
+      name: '',
       email: '',
+      studentId: '',
       major: '',
-      year: '1',
-      phoneNumber: '',
-      universityId: 0
+      year: 1
     });
   };
 
   const renderOverview = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">University Overview</h2>
-        <button
-          onClick={refreshData}
-          disabled={refreshing}
-          className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-          <span>Refresh</span>
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -315,14 +210,15 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
             {universityCourses.slice(0, 3).map((course) => (
               <div key={course.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{course.courseName}</p>
-                  <p className="text-sm text-gray-600">{course.instructor} • {course.credits} credits</p>
+                  <p className="font-medium text-gray-900">{course.name}</p>
+                  <p className="text-sm text-gray-600">{course.enrolled}/{course.capacity} enrolled</p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  course.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {course.status}
-                </span>
+                <div className="w-16 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-indigo-600 h-2 rounded-full" 
+                    style={{ width: `${(course.enrolled / course.capacity) * 100}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -335,10 +231,12 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{student.fullName}</p>
-                  <p className="text-sm text-gray-600">{student.major} - Year {student.year}</p>
+                  <p className="text-sm text-gray-600">{student.dept} - Year {student.year}</p>
                 </div>
-                <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                  {student.studentId}
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  student.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {student.status}
                 </span>
               </div>
             ))}
@@ -404,16 +302,16 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                 <tr key={course.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{course.courseName}</div>
-                      <div className="text-sm text-gray-500">{course.description}</div>
+                      <div className="text-sm font-medium text-gray-900">{course.name}</div>
+                      <div className="text-sm text-gray-500">{course.code}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{course.instructor}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">-/-</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{course.enrolled}/{course.capacity}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{course.credits}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      course.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      course.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {course.status}
                     </span>
@@ -426,10 +324,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                       <button className="text-blue-600 hover:text-blue-900">
                         <Edit size={16} />
                       </button>
-                      <button 
-                        onClick={() => handleDeleteCourse(course.id!)}
-                        className="text-red-600 hover:text-red-900"
-                      >
+                      <button className="text-red-600 hover:text-red-900">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -461,10 +356,22 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                 <input
                   type="text"
                   required
-                  value={courseForm.courseName}
-                  onChange={(e) => setCourseForm({...courseForm, courseName: e.target.value})}
+                  value={courseForm.name}
+                  onChange={(e) => setCourseForm({...courseForm, name: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Enter course name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
+                <input
+                  type="text"
+                  required
+                  value={courseForm.code}
+                  onChange={(e) => setCourseForm({...courseForm, code: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="e.g., CS101"
                 />
               </div>
               
@@ -505,6 +412,35 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                  <input
+                    type="number"
+                    required
+                    min="10"
+                    max="500"
+                    value={courseForm.capacity}
+                    onChange={(e) => setCourseForm({...courseForm, capacity: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={courseForm.category}
+                  onChange={(e) => setCourseForm({...courseForm, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                </select>
               </div>
               
               <div className="flex space-x-3 pt-4">
@@ -593,13 +529,15 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                       <div className="text-sm text-gray-500">{student.email}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{student.studentId}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{student.major}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{student.usercode}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{student.dept}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{student.year}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">-</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">5</td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                      Active
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      student.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {student.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
@@ -610,10 +548,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                       <button className="text-blue-600 hover:text-blue-900">
                         <Edit size={16} />
                       </button>
-                      <button 
-                        onClick={() => handleDeleteStudent(student.id!)}
-                        className="text-red-600 hover:text-red-900"
-                      >
+                      <button className="text-red-600 hover:text-red-900">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -645,8 +580,8 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                 <input
                   type="text"
                   required
-                  value={studentForm.fullName}
-                  onChange={(e) => setStudentForm({...studentForm, fullName: e.target.value})}
+                  value={studentForm.name}
+                  onChange={(e) => setStudentForm({...studentForm, name: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Enter student name"
                 />
@@ -692,26 +627,14 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
                 <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
                 <select
                   value={studentForm.year}
-                  onChange={(e) => setStudentForm({...studentForm, year: e.target.value})}
+                  onChange={(e) => setStudentForm({...studentForm, year: parseInt(e.target.value)})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
+                  <option value={1}>1st Year</option>
+                  <option value={2}>2nd Year</option>
+                  <option value={3}>3rd Year</option>
+                  <option value={4}>4th Year</option>
                 </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input
-                  type="text"
-                  required
-                  value={studentForm.phoneNumber}
-                  onChange={(e) => setStudentForm({...studentForm, phoneNumber: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter phone number"
-                />
               </div>
               
               <div className="flex space-x-3 pt-4">
@@ -767,7 +690,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
           <div className="space-y-4">
             {universityCourses.slice(0, 3).map((course) => (
               <div key={course.id} className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">{course.courseName}</span>
+                <span className="text-sm text-gray-600">{course.name}</span>
                 <span className="text-sm font-medium text-gray-900">
                   {Math.round((course.enrolled / course.capacity) * 100)}% full
                 </span>
@@ -811,16 +734,14 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">University Name</label>
               <input
                 type="text"
-                value={currentUniversity?.uniName || 'Loading...'}
-                readOnly
+                value={currentUniversity?.name || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <textarea
-                value={currentUniversity?.address || 'Loading...'}
-                readOnly
+                value={currentUniversity?.address || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 rows={3}
               />
@@ -829,11 +750,13 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Established Year</label>
               <input
                 type="text"
-                value={currentUniversity?.estYear || 'Loading...'}
-                readOnly
+                value={currentUniversity?.establishedYear || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
+            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+              Update University Information
+            </button>
           </div>
         </div>
 
@@ -844,8 +767,7 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name</label>
               <input
                 type="text"
-                value={user?.name || 'Loading...'}
-                readOnly
+                value={user?.fullName || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -853,11 +775,19 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
-                value={user?.email || 'Loading...'}
-                readOnly
+                value={user?.email || ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <button className="w-full text-left px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Change Password
+              </button>
+            </div>
+            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+              Update Profile
+            </button>
           </div>
         </div>
       </div>
@@ -892,17 +822,11 @@ const UniversityAdminDashboard: React.FC<UniversityAdminDashboardProps> = ({ act
   );
 
   const renderContent = () => {
-    if (isLoading && (courses.length === 0 && students.length === 0)) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading data...</p>
-          </div>
-        </div>
-      );
+    // Handle courses page navigation
+    if (activeTab === 'courses-page') {
+      return null; // Will be handled by MainLayout
     }
-
+    
     // Handle sidebar navigation
     if (activeTab === 'analytics') {
       return renderAnalytics();
